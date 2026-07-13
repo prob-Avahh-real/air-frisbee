@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1a14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>空气飞盘</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --ink: #0a1a14;
+      --deep: #06110c;
+      --foam: #e8f4ec;
+      --muted: #7a9a88;
+      --accent: #e8a54b;
+      --field: #3d8f5a;
+      --accent-dim: color-mix(in srgb, var(--accent) 28%, transparent);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: "Noto Sans SC", "Syne", sans-serif;
+      color: var(--foam);
+      background:
+        radial-gradient(ellipse 75% 48% at 50% 12%, var(--accent-dim), transparent 55%),
+        radial-gradient(ellipse 45% 35% at 8% 88%, color-mix(in srgb, var(--field) 22%, transparent), transparent 50%),
+        linear-gradient(168deg, #143024 0%, var(--ink) 48%, var(--deep) 100%);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: calc(12px + var(--safe-t)) 14px calc(12px + var(--safe-b));
+      user-select: none;
+      transition: background 0.45s ease;
+    }
+    body[data-field="beach"] {
+      background:
+        radial-gradient(ellipse 75% 48% at 50% 12%, var(--accent-dim), transparent 55%),
+        radial-gradient(ellipse 50% 40% at 90% 80%, rgba(196, 120, 58, 0.18), transparent 50%),
+        linear-gradient(168deg, #2a2218 0%, #14100c 50%, #0a0806 100%);
+    }
+    body[data-field="hoop"] {
+      background:
+        radial-gradient(ellipse 75% 48% at 50% 12%, var(--accent-dim), transparent 55%),
+        linear-gradient(168deg, #1e2818 0%, #0e1610 50%, #070c08 100%);
+    }
+
+    .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .brand {
+      font-family: "Syne", "Noto Sans SC", sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.35rem, 5vw, 1.8rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      animation: brandIn 0.7s ease-out both;
+    }
+    .brand span {
+      display: block;
+      font-size: 0.66rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+    .badges { display: flex; flex-direction: column; gap: 6px; }
+    .badge {
+      font-size: 0.66rem;
+      padding: 6px 10px;
+      border: 1px solid rgba(122, 154, 136, 0.35);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(6, 17, 12, 0.5);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .badge.active {
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+      background: color-mix(in srgb, var(--accent) 16%, transparent);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin: 6px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 0 0 auto;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 7px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+    .tab.active {
+      color: var(--deep);
+      background: var(--accent);
+    }
+    #field-tabs .tab.active {
+      background: var(--field);
+      color: #06110c;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .hud-cell {
+      text-align: center;
+      padding: 7px 4px;
+      border-radius: 12px;
+      background: rgba(6, 17, 12, 0.4);
+      border: 1px solid rgba(122, 154, 136, 0.18);
+    }
+    .hud-cell .v {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: 1.02rem;
+      letter-spacing: -0.02em;
+      color: var(--foam);
+    }
+    .hud-cell .l {
+      font-size: 0.6rem;
+      color: var(--muted);
+      margin-top: 2px;
+      letter-spacing: 0.06em;
+    }
+
+    .charge-track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(122, 154, 136, 0.2);
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    #charge-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 70%, #fff), var(--accent));
+      transition: width 0.06s linear;
+    }
+
+    .stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      position: relative;
+    }
+    .nameplate {
+      text-align: center;
+      z-index: 2;
+      margin-bottom: 4px;
+      animation: rise 0.55s ease-out both;
+    }
+    .nameplate .name {
+      font-family: "Syne", "Noto Sans SC", sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.6rem, 7vw, 2.4rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      text-shadow: 0 8px 36px color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+    .nameplate .hint {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    #status[data-state="charge"] { color: var(--accent); }
+    #status[data-state="fly"] { color: #8fd4a8; }
+    #status[data-state="over"] { color: #e8b878; }
+    #status[data-state="idle"] { color: var(--muted); }
+
+    #field {
+      flex: 1;
+      width: 100%;
+      min-height: 160px;
+      border-radius: 18px;
+      border: 1px solid rgba(122, 154, 136, 0.22);
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--field) 18%, transparent), transparent 40%),
+        rgba(4, 14, 10, 0.55);
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1.3fr 1.4fr 0.9fr 0.9fr;
+      gap: 8px;
+      width: 100%;
+      max-width: 460px;
+      align-self: center;
+      margin-top: 8px;
+    }
+    .controls button {
+      border: none;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.86rem;
+      padding: 14px 8px;
+      border-radius: 16px;
+      cursor: pointer;
+      color: var(--foam);
+      background: rgba(6, 17, 12, 0.55);
+      border: 1px solid rgba(122, 154, 136, 0.28);
+    }
+    #throw-btn {
+      background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 88%, #fff), var(--accent));
+      color: #0a1210;
+      border: none;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+    }
+    #mute-btn.on {
+      color: #ffb4a8;
+      border-color: rgba(255, 180, 168, 0.45);
+    }
+
+    .help {
+      text-align: center;
+      font-size: 0.64rem;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(22px + var(--safe-b));
+      transform: translateX(-50%) translateY(12px);
+      background: rgba(6, 17, 12, 0.92);
+      border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      color: var(--accent);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 40;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes brandIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 280px), (max-height: 300px) {
+      body { padding: 6px; }
+      .brand { font-size: 0.92rem; }
+      .brand span, .help, .badges, #mute-btn, #round-btn { display: none; }
+      .tabs { margin: 3px 0; }
+      .tab { font-size: 0.6rem; padding: 4px 8px; }
+      .hud { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+      .hud-cell { padding: 4px; }
+      .hud-cell .v { font-size: 0.82rem; }
+      .nameplate .name { font-size: 1.3rem; }
+      .nameplate .hint { display: none; }
+      .controls { grid-template-columns: 1fr 1.3fr; margin-top: 4px; }
+      #charge-btn, #throw-btn { padding: 10px; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body data-disc="classic" data-field="lawn">
+  <header class="top">
+    <h1 class="brand">空气飞盘<span>Air Frisbee</span></h1>
+    <div class="badges">
+      <div class="badge" id="ring-badge">戒指 · 点击启用</div>
+      <div class="badge" id="cane-badge">手杖 · 点击启用</div>
+    </div>
+  </header>
+
+  <div class="tabs" id="disc-tabs" aria-label="飞盘款式"></div>
+  <div class="tabs" id="field-tabs" aria-label="场地"></div>
+
+  <div class="hud" aria-live="polite">
+    <div class="hud-cell"><div class="v" id="score">0</div><div class="l">得分</div></div>
+    <div class="hud-cell"><div class="v" id="throws-left">5</div><div class="l">剩余</div></div>
+    <div class="hud-cell"><div class="v" id="charge-val">0%</div><div class="l">蓄力</div></div>
+    <div class="hud-cell"><div class="v" id="best-score">0</div><div class="l">最佳</div></div>
+  </div>
+  <div class="charge-track" aria-hidden="true"><div id="charge-bar"></div></div>
+
+  <main class="stage">
+    <div class="nameplate">
+      <div class="name" id="disc-name">经典</div>
+      <div class="hint"><span id="field-label">草坪</span> · <span id="disc-hint">均衡顺手</span> · 仰角 <span id="loft-val">28%</span></div>
+      <div class="hint" id="status" data-state="idle">待命</div>
+    </div>
+    <canvas id="field" aria-label="飞盘场地"></canvas>
+  </main>
+
+  <div class="controls">
+    <button type="button" id="charge-btn">蓄力</button>
+    <button type="button" id="throw-btn">出手</button>
+    <button type="button" id="round-btn">新一轮</button>
+    <button type="button" id="mute-btn">静音</button>
+  </div>
+  <p class="help">戒指倾角瞄准 · 甩动取消 · 手杖挥动蓄力 · 敲击出手<br>画布拖动瞄准 · 按住空格蓄力松开出手 · 1/2/3 换场 · ←→ 换盘 · M 静音 · R 新一轮</p>
+
+  <div id="toast" role="status"></div>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

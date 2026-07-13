@@ -1,0 +1,20 @@
+{
+  "appId": "com.skat.airfrisbee",
+  "appName": "空气飞盘",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0a1a14"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "air-frisbee",
+  "version": "1.0.0",
+  "description": "空气飞盘手势与场地协议",
+  "gestures": {
+    "ring": {
+      "aim": {
+        "action": "aim",
+        "mode": "absolute",
+        "beta_range_deg": [-40, 40],
+        "gamma_range_deg": [-45, 45],
+        "throttle_frames": 2
+      },
+      "shake": { "action": "cancel_charge", "threshold_deg": 20, "throttle_frames": 8 }
+    },
+    "cane": {
+      "swing": { "action": "charge", "threshold": 3, "throttle_frames": 6 },
+      "tap": { "action": "throw", "accel_spike": 8, "throttle_frames": 6 }
+    }
+  },
+  "discs": [
+    { "id": "classic", "label": "经典", "glide": 1.0, "curve": 1.0, "lift": 1.0 },
+    { "id": "soft", "label": "软盘", "glide": 0.82, "curve": 0.75, "lift": 1.25 },
+    { "id": "pro", "label": "竞技", "glide": 1.22, "curve": 1.35, "lift": 0.95 },
+    { "id": "glow", "label": "夜光", "glide": 1.05, "curve": 1.1, "lift": 1.1 }
+  ],
+  "fields": [
+    { "id": "lawn", "label": "草坪", "wind": 0.04, "mode": "distance" },
+    { "id": "hoop", "label": "穿环", "wind": 0.08, "mode": "hoops" },
+    { "id": "beach", "label": "沙滩", "wind": 0.22, "mode": "distance" }
+  ],
+  "round": {
+    "throws": 5,
+    "max_charge": 1,
+    "charge_rate": 0.9,
+    "min_throw_power": 0.15
+  },
+  "scoring": {
+    "distance_zones": [
+      { "min_m": 40, "points": 10, "label": "超远" },
+      { "min_m": 28, "points": 8, "label": "远投" },
+      { "min_m": 18, "points": 5, "label": "中距" },
+      { "min_m": 10, "points": 2, "label": "近距" }
+    ],
+    "hoop_bonus": 6,
+    "miss": 0
+  }
+}
